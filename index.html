@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#102a43" />
+  <title>HCT ClassQuest</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">HCT</span><div><strong>ClassQuest</strong><small id="contextLine">Learn • Challenge • Engage</small></div></div>
+      <div class="top-actions"><span id="progressPill" class="pill hidden">0 / 0 completed</span><button id="teacherBtn" class="btn ghost hidden">Teacher Controls</button></div>
+    </header>
+    <main id="main" class="main"></main>
+    <aside id="scoreboard" class="scoreboard hidden" aria-hidden="true"></aside>
+  </div>
+  <dialog id="teacherDialog"><div class="dialog-head"><h2>Teacher Controls</h2><button class="icon-btn" data-close-dialog>×</button></div><div id="teacherControls"></div></dialog>
+  <dialog id="confirmDialog"><div class="dialog-head"><h2>Confirm action</h2><button class="icon-btn" data-close-confirm>×</button></div><p id="confirmText"></p><div class="dialog-actions"><button class="btn ghost" data-close-confirm>Cancel</button><button id="confirmYes" class="btn danger">Confirm</button></div></dialog>
+  <script src="app.js"></script>
+</body>
+</html>
