@@ -51,3 +51,41 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
 
 /* Confirmation dialog message: comfortable horizontal spacing. */
 #confirmDialog #confirmText{padding:8px 24px 4px;margin:12px 0;line-height:1.55;text-align:left;}
+
+/* Restored 3D flip on both manual and automatic answer reveal. */
+.question-card{transform-origin:center center;backface-visibility:hidden;will-change:transform,opacity}
+.question-card.swap-out{animation:classquestFlipOut .30s cubic-bezier(.4,0,.2,1) forwards;pointer-events:none}
+.question-card.swap-in{animation:classquestFlipIn .48s cubic-bezier(.2,.8,.2,1) both}
+@keyframes classquestFlipOut{0%{transform:perspective(1200px) rotateY(0deg);opacity:1}100%{transform:perspective(1200px) rotateY(88deg);opacity:.15}}
+@keyframes classquestFlipIn{0%{transform:perspective(1200px) rotateY(-88deg);opacity:.15}100%{transform:perspective(1200px) rotateY(0deg);opacity:1}}
+@media(prefers-reduced-motion:reduce){.question-card.swap-out,.question-card.swap-in{animation:none!important}}
+
+/* Keep multiple-choice options visually separate and readable on projectors. */
+.question-card .choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:900px;margin:22px auto;text-align:left}
+.question-card .choice{font-size:clamp(17px,2vw,24px);font-weight:550;line-height:1.4;padding:18px 22px;overflow-wrap:anywhere}
+.question-card .choice strong{color:var(--blue);margin-right:8px}
+.question-card:has(.choices) .question-text{font-size:clamp(25px,3.5vw,42px);margin:18px auto}
+@media(max-width:700px){.question-card .choices{grid-template-columns:1fr}}
+
+/* ClassQuest 2.0 AI workspace */
+.ai-entry{margin:24px auto 0;max-width:760px;padding:26px;border:1px solid #bcd5f4;border-radius:22px;background:linear-gradient(135deg,#eff6ff,#fff);text-align:left}
+.ai-entry h2{margin:10px 0}.ai-entry p{color:#5c748c}
+.ai-tag{color:#2463d3;font-size:12px;letter-spacing:1.5px;font-weight:800}
+.ai-panel{background:#fff;border:1px solid #d9e4ef;border-radius:22px;padding:26px;margin:22px 0;box-shadow:0 12px 30px #1734550b}
+.ai-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.ai-wide{grid-column:1/-1}
+.ai-grid label,.ai-panel .field{display:flex;flex-direction:column;gap:8px;color:#173455;font-weight:650}
+.ai-grid input:not([type=checkbox]),.ai-grid select,.ai-grid textarea,.ai-panel select,.ai-panel input[type=file]{width:100%;max-width:100%;padding:12px;border:1px solid #c6d5e4;border-radius:10px;font:inherit;color:#173455;background:white}
+.ai-grid textarea{min-height:86px;resize:vertical}
+.ai-checks{display:flex;gap:14px;flex-wrap:wrap}
+.ai-checks label,.ai-panel label:has(input[type=checkbox]){display:flex;flex-direction:row;align-items:center;gap:8px;font-weight:500}
+.ai-status{min-height:25px;margin:12px 0;color:#1f5ca9;font-weight:600}
+.ai-review-head{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.ai-review-actions{display:flex;gap:10px;flex-wrap:wrap}
+.ai-review-list{display:grid;gap:18px;margin-top:22px}
+.ai-question{padding:20px;border:1px solid #dce7f1;border-radius:16px;background:#f9fbfe}
+.ai-question-top{display:flex;justify-content:space-between;gap:12px;margin-bottom:15px}
+.ai-warning{background:#fff2d6;border-left:4px solid #e6a321;color:#75450b;padding:10px;margin-bottom:10px;border-radius:6px}
+@media(max-width:680px){.ai-grid{grid-template-columns:1fr}.ai-panel{padding:16px}}
+
+.pb-output{width:100%;min-height:420px;margin-top:20px;padding:20px;border:1px solid #c6d5e4;border-radius:12px;line-height:1.55;font:14px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;color:#173455;background:#f8fbff;resize:vertical}
