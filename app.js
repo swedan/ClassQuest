@@ -21,10 +21,10 @@ function renderCourses(){state.course=state.category=state.topic=null;cards('Sel
 function renderCategories(){state.category=state.topic=null;const items=uniq(state.rows.filter(q=>q.Course===state.course).map(q=>q.Category));cards('Select Category',state.course,items,v=>{state.category=v;renderTopics()},renderCourses);}
 function renderTopics(){state.topic=null;const items=uniq(state.rows.filter(q=>q.Course===state.course&&q.Category===state.category).map(q=>q.Topic));cards('Select Topic',`${state.course} › ${state.category}`,items,v=>{state.topic=v;renderBoard()},renderCategories);}
 function topicRows(){return state.rows.filter(q=>q.Course===state.course&&q.Category===state.category&&q.Topic===state.topic)}
-function renderBoard(){stopTimer();state.revealing=false;state.current=null;const rows=topicRows(),keys=uniq(rows.map(q=>q.Keyword));main.innerHTML=`<button class="btn ghost back" id="back">← Topics</button><div class="screen-head"><div><div class="breadcrumbs">${esc(state.course)} › ${esc(state.category)}</div><h1 class="screen-title">${esc(state.topic)}</h1><p class="subtitle">Choose a keyword card. Completed cards lock when no unused questions remain.</p></div><button id="end" class="btn ghost">End Game</button></div><div class="cards">${keys.map(k=>{const qs=rows.filter(q=>q.Keyword===k),left=qs.filter(q=>!state.used.has(q.id)).length,done=!left;return `<button class="keyword-card ${done?'done':''}" data-key="${encodeURIComponent(k)}" ${done?'disabled':''}><h3>${esc(k)}</h3><p>${done?'Completed':`${left} question${left===1?'':'s'} remaining`}</p><div class="keyword-meta"><span>${uniq(qs.map(q=>q.Difficulty)).join(' • ')}</span><span>${Math.min(...qs.map(q=>q.Points))}–${Math.max(...qs.map(q=>q.Points))} pts</span></div></button>`}).join('')}</div>`;document.querySelectorAll('[data-key]').forEach(b=>b.onclick=()=>chooseKeyword(decodeURIComponent(b.dataset.key)));$('#back').onclick=renderTopics;$('#end').onclick=()=>confirmAction('End the current game and show the final leaderboard?',renderFinal);showGameChrome();}
+function renderBoard(){stopTimer();state.revealing=false;state.revealToken=(state.revealToken||0)+1;state.current=null;const rows=topicRows(),keys=uniq(rows.map(q=>q.Keyword));main.innerHTML=`<button class="btn ghost back" id="back">← Topics</button><div class="screen-head"><div><div class="breadcrumbs">${esc(state.course)} › ${esc(state.category)}</div><h1 class="screen-title">${esc(state.topic)}</h1><p class="subtitle">Choose a keyword card. Completed cards lock when no unused questions remain.</p></div><button id="end" class="btn ghost">End Game</button></div><div class="cards">${keys.map(k=>{const qs=rows.filter(q=>q.Keyword===k),left=qs.filter(q=>!state.used.has(q.id)).length,done=!left;return `<button class="keyword-card ${qs.some(q=>q.Difficulty.toLowerCase()==="hard")?"difficulty-hard":qs.some(q=>q.Difficulty.toLowerCase()==="medium")?"difficulty-medium":"difficulty-easy"} ${done?'done':''}" data-key="${encodeURIComponent(k)}" ${done?'disabled':''}><h3>${esc(k)}</h3><p>${done?'✓ Completed':`${left} question${left===1?'':'s'} remaining`}</p><div class="keyword-meta"><span>${uniq(qs.map(q=>q.Difficulty)).join(' • ')}</span><span>${Math.min(...qs.map(q=>q.Points))}–${Math.max(...qs.map(q=>q.Points))} pts</span></div></button>`}).join('')}</div>`;document.querySelectorAll('[data-key]').forEach(b=>b.onclick=()=>chooseKeyword(decodeURIComponent(b.dataset.key)));$('#back').onclick=renderTopics;$('#end').onclick=()=>confirmAction('End the current game and show the final leaderboard?',renderFinal);showGameChrome();}
 function chooseKeyword(k){const qs=topicRows().filter(q=>q.Keyword===k&&!state.used.has(q.id));if(!qs.length)return renderBoard();if(state.settings.strategy==='teacher'&&qs.length>1)return renderTeacherChoice(k,qs);let q;if(state.settings.strategy==='low'||state.settings.strategy==='high'){const rank={easy:1,medium:2,hard:3};q=[...qs].sort((a,b)=>((rank[a.Difficulty.toLowerCase()]||2)-(rank[b.Difficulty.toLowerCase()]||2))*(state.settings.strategy==='low'?1:-1)||a.Points-b.Points)[0];}else q=qs[Math.floor(Math.random()*qs.length)];showQuestion(q);}
 function renderTeacherChoice(k,qs){main.innerHTML=`<button class="btn ghost back" id="back">← Board</button><div class="screen-head"><div><div class="eyebrow">Teacher chooses</div><h1 class="screen-title">${esc(k)}</h1><p class="subtitle">Select one unused question.</p></div></div><div class="teacher-choice">${qs.map((q,i)=>`<button class="btn" data-q="${q.id}">Question ${i+1} · ${esc(q.Difficulty)} · ${q.Points} points<br><span class="note">${esc(q.Question)}</span></button>`).join('')}</div>`;document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>showQuestion(qs.find(q=>q.id===b.dataset.q)));$('#back').onclick=renderBoard;showGameChrome();}
-function showQuestion(q){stopTimer();state.revealing=false;state.current=q;state.answerShown=false;state.timer.left=state.settings.timer;state.timer.lastSoundSecond=null;renderQuestion();if(state.settings.timer>0)startTimer();}
+function showQuestion(q){stopTimer();state.revealing=false;state.revealToken=(state.revealToken||0)+1;state.current=q;state.answerShown=false;state.timer.left=state.settings.timer;state.timer.lastSoundSecond=null;renderQuestion();if(state.settings.timer>0)startTimer();}
 function renderQuestion(){const q=state.current,type=q.QuestionType.toLowerCase();const mcq=parseMCQ(q.Question,q.Choices);const choices=mcq.choices;main.innerHTML=`<div class="question-wrap"><button class="btn ghost back" id="back">← Game Board</button><div class="question-card"><div class="question-kicker">${esc(q.Keyword)}</div><div class="question-meta">${q.Points} POINTS • ${esc(q.Difficulty).toUpperCase()} • ${esc(q.QuestionType).toUpperCase()}</div>${q.Image?`<img class="question-image" src="${esc(q.Image)}" alt="Question diagram" onerror="this.style.display='none'">`:''}${q.Scenario?`<div class="question-text scenario">${esc(q.Scenario)}</div>`:''}<div class="question-text ${type==='scenario'?'scenario':''}">${esc(mcq.question)}</div>${(choices.length>=2)?`<div class="choices">${choices.map((c,i)=>`<div class="choice"><strong>${String.fromCharCode(65+i)}.</strong> ${esc(c)}</div>`).join('')}</div>`:''}${type.includes('true')&&!choices.length?'<div class="choices"><div class="choice">True</div><div class="choice">False</div></div>':''}<div id="answerArea">${state.answerShown?`<div class="answer"><strong>Answer</strong><br>${esc(q.Answer)}</div>`:''}</div>${timerHTML()}<div class="question-actions">${!state.answerShown?'<button id="reveal" class="btn large">Reveal Answer</button>':awardHTML()}</div></div></div>`;$('#back').onclick=()=>confirmAction('Return to the board? This question will remain unused.',()=>{stopTimer();renderBoard()});if($('#reveal'))$('#reveal').onclick=revealAnswer;bindTimer();if(state.answerShown)bindAward();showGameChrome();}
 function splitChoices(s){return String(s||'').split(/\s*\|\s*|\s*;\s*|\r?\n/).map(x=>x.trim()).filter(Boolean).map(x=>x.replace(/^[A-H][).:]\s*/i,''))}
 // Accept choices in a dedicated Choices column OR inline after the question.
@@ -47,7 +47,7 @@ function parseMCQ(question,choiceText){
   if(choices.length!==chain.length)return {question:original,choices:[]};
   return {question:original.slice(0,chain[0].start).trim(),choices};
 }
-function timerHTML(){if(!state.settings.timer)return'';return `<div class="timer"><span id="timerDisplay" class="timer-display ${state.timer.left===0?'zero':state.timer.left<=5?'urgent':state.timer.left<=10?'warning':''}">${state.timer.left}s</span></div>`}
+function timerHTML(){if(!state.settings.timer)return'';const left=state.timer.left,total=state.settings.timer,stage=left===0?'zero':left<=5?'urgent':left<=10?'warning':'';return `<div class="timer"><div id="timerRing" class="cq-timer-ring ${stage}" style="--cq-progress:${left/total*100}%" role="timer" aria-label="Time remaining: ${left} seconds"><div class="cq-timer-core"><span id="timerDisplay" class="timer-display ${stage}">${left}s</span><small>REMAINING</small></div></div></div>`}
 function bindTimer(){} // Timer is automatic; no manual controls.
 function startTimer(){
   stopTimer();
@@ -60,7 +60,9 @@ function startTimer(){
     state.timer.left=Math.max(0,Math.ceil((deadline-Date.now())/1000));
     const display=$('#timerDisplay');
     if(display){display.textContent=state.timer.left+'s';display.classList.toggle('zero',state.timer.left===0);display.classList.toggle('urgent',state.timer.left>0&&state.timer.left<=5);display.classList.toggle('warning',state.timer.left>5&&state.timer.left<=10);}
-    if(state.timer.left===0){stopTimer();beep();revealAnswer();}
+    const ring=$('#timerRing');if(ring){ring.style.setProperty('--cq-progress',state.timer.left/state.settings.timer*100+'%');ring.classList.toggle('zero',state.timer.left===0);ring.classList.toggle('urgent',state.timer.left>0&&state.timer.left<=5);ring.classList.toggle('warning',state.timer.left>5&&state.timer.left<=10);ring.setAttribute('aria-label',`Time remaining: ${state.timer.left} seconds`);}
+    if(state.timer.left>0&&state.timer.left<=5&&state.timer.lastSoundSecond!==state.timer.left){state.timer.lastSoundSecond=state.timer.left;beep(state.timer.left===1?1000:740);}
+    if(state.timer.left===0){stopTimer();revealAnswer();}
   };
   state.timer.id=setInterval(tick,100);
 }
@@ -68,12 +70,12 @@ function stopTimer(){if(state.timer.id!=null)clearInterval(state.timer.id);state
 function revealAnswer(){
   if(!state.current||state.answerShown||state.revealing)return;
   stopTimer();state.revealing=true;
-  const questionId=state.current.id;
+  const questionId=state.current.id;const revealToken=state.revealToken=(state.revealToken||0)+1;
   const card=document.querySelector('.question-card');
   const button=$('#reveal');if(button)button.disabled=true;
   if(card)card.classList.add('swap-out');
   setTimeout(()=>{
-    if(!state.current||state.current.id!==questionId){state.revealing=false;return;}
+    if(!state.current||state.current.id!==questionId||state.revealToken!==revealToken){state.revealing=false;return;}
     state.answerShown=true;state.revealing=false;renderQuestion();
     const next=document.querySelector('.question-card');
     if(next){next.classList.add('swap-in');next.addEventListener('animationend',()=>next.classList.remove('swap-in'),{once:true});}
@@ -102,19 +104,33 @@ function renderStatistics(){
   const byTopic=uniq(rows.map(q=>q.Topic)).map(topic=>{const r=rows.filter(q=>q.Topic===topic),x=resultStats(r);return {topic,...x}});
   const missed=[...s.incorrect,...s.skipped];
   main.innerHTML=`<button class="btn ghost back" id="statsBack">← Back</button><div class="screen-head"><div><div class="eyebrow">Session analytics</div><h1 class="screen-title">Statistics Board</h1><p class="subtitle">Live performance summary for ${esc(state.course||'the current course')}.</p></div></div>
-  <div class="analytics-grid">
+  <div class="analytics-grid cq-analytics-grid">
     <div class="analytics-card good-stat"><span>Correct</span><strong>${s.correct.length}</strong></div>
     <div class="analytics-card bad-stat"><span>Incorrect</span><strong>${s.incorrect.length}</strong></div>
     <div class="analytics-card"><span>Skipped</span><strong>${s.skipped.length}</strong></div>
-    <div class="analytics-card"><span>Accuracy</span><strong>${s.accuracy}%</strong></div>
+    <div class="analytics-card cq-accuracy-card"><span>Accuracy</span><div class="cq-accuracy-ring" style="--cq-accuracy:${s.accuracy}%"><strong>${s.accuracy}%</strong></div></div>
     <div class="analytics-card"><span>Completed</span><strong>${s.attempted.length}/${s.total}</strong></div>
-    <div class="analytics-card"><span>Points earned</span><strong>${s.pointsEarned}</strong></div>
+    <div class="analytics-card cq-points-card"><span>Points earned</span><strong>${s.pointsEarned}</strong></div>
   </div>
-  <section class="analytics-panel"><h2>Performance by Topic</h2><div class="analytics-table"><div class="analytics-row analytics-head"><span>Topic</span><span>Correct</span><span>Incorrect</span><span>Skipped</span><span>Accuracy</span></div>${byTopic.map(x=>`<div class="analytics-row"><span>${esc(x.topic)}</span><span>${x.correct.length}</span><span>${x.incorrect.length}</span><span>${x.skipped.length}</span><span>${x.accuracy}%</span></div>`).join('')}</div></section>
+  <section class="analytics-panel"><h2>Performance by Topic</h2><div class="analytics-table"><div class="analytics-row analytics-head"><span>Topic</span><span>Correct</span><span>Incorrect</span><span>Skipped</span><span>Accuracy</span></div>${byTopic.map(x=>`<div class="analytics-row"><span>${esc(x.topic)}</span><span>${x.correct.length}</span><span>${x.incorrect.length}</span><span>${x.skipped.length}</span><span class="cq-topic-accuracy"><strong>${x.accuracy}%</strong><span class="cq-topic-track"><span class="cq-topic-fill" style="--cq-topic:${x.accuracy}%"></span></span></span></div>`).join('')}</div></section>
   <section class="analytics-panel"><h2>Questions to Review</h2>${missed.length?`<div class="review-list">${missed.map(q=>`<div class="review-item"><div><strong>${esc(q.Keyword)}</strong><span class="result-badge ${state.results.get(q.id)}">${state.results.get(q.id)==='incorrect'?'Incorrect':'Skipped'}</span><p>${esc(q.Question)}</p></div><small>${esc(q.Topic)} · ${q.Points} pts · ${esc(q.Difficulty)}</small></div>`).join('')}</div>`:'<p class="note">No incorrect or skipped questions yet.</p>'}</section>`;
-  $('#statsBack').onclick=()=>state.topic?renderBoard():renderCourses();showGameChrome();
+  $('#statsBack').onclick=()=>state.topic?renderBoard():renderCourses();showGameChrome();animateStatistics();
 }
 
+function animateStatistics(){
+  if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const cards=document.querySelectorAll('.analytics-card');
+  const fields=[0,1,2,3,null,5];
+  const values=[...cards].map((card,i)=>({el:card.querySelector('strong'),target:Number((card.querySelector('strong')?.textContent||'').replace(/[^0-9]/g,'')),i})).filter(x=>fields.includes(x.i));
+  const started=performance.now(),duration=650;
+  const animate=now=>{
+    if(!document.querySelector('.cq-analytics-grid'))return;
+    const t=Math.min(1,(now-started)/duration),eased=1-Math.pow(1-t,3);
+    values.forEach(({el,target,i})=>{if(el)el.textContent=Math.round(target*eased)+(i===3?'%':'')});
+    if(t<1)requestAnimationFrame(animate);
+  };
+  requestAnimationFrame(animate);
+}
 function renderFinal(){stopTimer();const relevant=gameRows(),stats=resultStats(relevant),done=stats.attempted.length;main.innerHTML=`<section class="hero final-screen"><div class="eyebrow">Game complete</div><h1>Session Complete</h1><p>You completed <strong>${done}</strong> of <strong>${relevant.length}</strong> questions with <strong>${stats.accuracy}% accuracy</strong>.</p><div class="question-actions"><button id="viewStats" class="btn">View Statistics</button><button id="again" class="btn ghost">Play Again</button><button id="newBank" class="btn ghost">New Question Bank</button></div></section>`;$('#viewStats').onclick=renderStatistics;$('#again').onclick=()=>{state.used.clear();state.results.clear();renderCourses()};$('#newBank').onclick=()=>confirmAction('Load another question bank? Current game progress will be cleared.',()=>{state.rows=[];state.used.clear();state.results.clear();renderStart()});showGameChrome();}
 function confirmAction(text,fn){const d=$('#confirmDialog');$('#confirmText').textContent=text;$('#confirmYes').onclick=()=>{d.close();fn()};d.showModal();}
 document.querySelectorAll('[data-close-confirm]').forEach(b=>b.onclick=()=>$('#confirmDialog').close());document.querySelectorAll('[data-close-dialog]').forEach(b=>b.onclick=()=>$('#teacherDialog').close());

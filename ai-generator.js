@@ -4,7 +4,7 @@ function renderAIGenerator(){
   main.innerHTML=`<button id="promptBack" class="btn ghost back">← Home</button>
   <div class="screen-head"><div><h1 class="screen-title">AI Question Bank Prompt Builder</h1><p class="subtitle">Choose your requirements, copy the prompt, then upload your PowerPoint to any AI tool.</p></div></div>
   <section class="ai-panel"><div class="ai-grid">
-  <div class="field"><label for="pbCourse">Course code and title</label><input id="pbCourse" placeholder="e.g. Ai101 — Introduction to Artificial Intelligence"></div>
+  <div class="field"><label for="pbCourse">Course code and title</label><input id="pbCourse" placeholder="e.g. CSE2123 — Software Architecture & Design"></div>
   <div class="field"><label for="pbLevel">Learner level</label><select id="pbLevel"><option>Higher Education / University</option><option>Foundation / Beginner</option><option>Vocational / Technical</option><option>Advanced University</option><option>Secondary School</option></select></div>
   <div class="field"><label for="pbCount">Number of questions</label><input id="pbCount" type="number" min="1" max="60" value="30"></div>
   <div class="field"><label for="pbDifficulty">Difficulty distribution</label><select id="pbDifficulty"><option value="Balanced: 30% Easy, 40% Medium, 30% Hard">Balanced — 30% Easy / 40% Medium / 30% Hard</option><option value="Beginner: 60% Easy, 30% Medium, 10% Hard">Beginner — 60% Easy / 30% Medium / 10% Hard</option><option value="Advanced: 10% Easy, 40% Medium, 50% Hard">Advanced — 10% Easy / 40% Medium / 50% Hard</option><option value="Easy only: 100% Easy">Easy only</option><option value="Medium only: 100% Medium">Medium only</option><option value="Hard only: 100% Hard">Hard only</option></select></div>
